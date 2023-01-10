@@ -5,7 +5,7 @@ import User, { IUser } from "../../database/models/User";
 import asyncHandler from "../../helpers/asyncHandler";
 import { AuthFailureError, InternalError } from "../../core/ApiErrors";
 import * as bcrypt from "bcrypt";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessResponse } from "../../core/ApiResponses";
 import { validate } from "../../core/Validator";
 import { authSchema } from "./validationSchema";
 const router = Router();

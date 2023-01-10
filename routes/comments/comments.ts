@@ -7,7 +7,7 @@ import { applyPagination } from "../../helpers";
 import express from "express";
 import { BadRequestError, InternalError } from "../../core/ApiErrors";
 import { validate, validateIdParam } from "../../core/Validator";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessResponse } from "../../core/ApiResponses";
 import { commentsSchema } from "./validationSchema";
 const router = express.Router();
 

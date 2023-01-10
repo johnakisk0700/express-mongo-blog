@@ -13,7 +13,7 @@ import { NotFoundError } from "../../core/ApiErrors";
 import { validate, validateIdParam } from "../../core/Validator";
 import { postSchema } from "./validationSchema";
 import { paginationSchema } from "../paginationSchema";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessResponse } from "../../core/ApiResponses";
 
 const router = express.Router();
 

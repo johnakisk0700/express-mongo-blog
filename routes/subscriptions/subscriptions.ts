@@ -9,7 +9,7 @@ import { applyPagination } from "../../helpers";
 import { validate } from "../../core/Validator";
 import { subscriptionsSchema } from "./validationSchema";
 import { BadRequestError } from "../../core/ApiErrors";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessResponse } from "../../core/ApiResponses";
 const router = express.Router();
 
 // [GET] All subscriptions

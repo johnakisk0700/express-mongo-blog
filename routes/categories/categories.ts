@@ -3,7 +3,7 @@ import { TODO } from "../../types";
 import Category, { ICategory } from "../../database/models/Category";
 import passport from "../../core/passport";
 import asyncHandler from "../../helpers/asyncHandler";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessResponse } from "../../core/ApiResponses";
 import { NotFoundError } from "../../core/ApiErrors";
 import express from "express";
 import { categoriesSchema } from "./validationSchema";
