@@ -1,36 +1,16 @@
-import express from 'express';
-import { TODO } from '../types';
-const router = express.Router();
+import { Router } from "express";
+import auth from "./auth/auth";
+import categories from "./categories/categories";
+import post from "./post/post";
+import subscriptions from "./subscriptions/subscriptions";
+import comments from "./comments/comments";
 
-import Category from '../models/Category';
-import Post, { IPost } from '../models/Post';
+const router = Router();
 
-router.get('/category', function (req, res, next) {
-    Category.find(function (err, categories) {
-        if (err) return next(err);
-        res.json(categories);
-    });
-});
-
-router.get('/bycategory/:id', function (req, res, next) {
-    Post.find({ category: req.params.id }, function (err: TODO, posts: IPost[]) {
-        if (err) return next(err);
-        res.json(posts);
-    });
-});
-
-router.get('/post', function (req, res, next) {
-    Post.find(function (err, posts: IPost[]) {
-        if (err) return next(err);
-        res.json(posts);
-    });
-});
-
-router.get('/post/:id', function (req, res, next) {
-    Post.findById(req.params.id, function (err: TODO, post: IPost) {
-        if (err) return next(err);
-        res.json(post);
-    });
-});
+router.use("/api/auth", auth);
+router.use("/api/categories", categories);
+router.use("/api/posts", post);
+router.use("/api/comments", comments);
+router.use("/api/subscriptions", subscriptions);
 
 export default router;

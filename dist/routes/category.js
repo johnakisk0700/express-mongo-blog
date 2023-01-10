@@ -12,27 +12,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Category_1 = __importDefault(require("../models/Category"));
+const Category_1 = __importDefault(require("../database/models/Category"));
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
-const passport_1 = __importDefault(require("passport"));
-const passport_2 = __importDefault(require("../config/passport"));
+const passport_1 = __importDefault(require("../core/passport"));
 const asyncHandler_1 = __importDefault(require("../helpers/asyncHandler"));
-(0, passport_2.default)(passport_1.default);
+const ApiResponse_1 = require("../core/ApiResponse");
+const ApiErrors_1 = require("../core/ApiErrors");
 // get the list of the category
-router.get('/', (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    Category_1.default.find(function (err, categories) {
-        res.json(categories);
-    });
+router.get("/", (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const categories = yield Category_1.default.find({});
+    if (!categories)
+        throw new ApiErrors_1.NotFoundError("No categories found.");
+    new ApiResponse_1.SuccessResponse("Categories list", categories).send(res);
 })));
 // get a single category by ID
-router.get('/:id', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/:id", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Category_1.default.findById(req.params.id, function (err, category) {
         res.json(category);
     });
 })));
 // post a category
-router.post('/', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Category_1.default.create(req.body, function (err, category) {
         if (err)
             return next(err);
@@ -40,13 +41,13 @@ router.post('/', passport_1.default.authenticate('jwt', { session: false }), (0,
     });
 })));
 // update category
-router.put('/:id', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/:id", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Category_1.default.findByIdAndUpdate(req.params.id, req.body, {}, function (err, category) {
         res.json(category);
     });
 })));
 // delete a category by ID
-router.delete('/:id', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete("/:id", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Category_1.default.findByIdAndRemove(req.params.id, req.body, function (err, category) {
         res.json(category);
     });

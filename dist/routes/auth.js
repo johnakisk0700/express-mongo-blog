@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,67 +35,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const router = express_1.default.Router();
-const passport_1 = __importDefault(require("passport"));
-const passport_2 = __importDefault(require("../config/passport"));
-(0, passport_2.default)(passport_1.default);
-const settings_1 = __importDefault(require("../config/settings"));
+const express_1 = require("express");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const User_1 = __importDefault(require("../models/User"));
+const User_1 = __importDefault(require("../database/models/User"));
 const asyncHandler_1 = __importDefault(require("../helpers/asyncHandler"));
-router.post('/register', (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('try to register!!!');
-    if (!req.body.username || !req.body.password) {
-        res.json({ success: false, msg: 'Please pass username and password.' });
-    }
-    else {
-        var newUser = new User_1.default({
-            username: req.body.username,
-            password: req.body.password,
-        });
-        // save the user
-        newUser.save(function (err) {
-            if (err) {
-                return res.json({ success: false, msg: 'Username already exists.' });
-            }
-            res.json({ success: true, msg: 'Successful created new user.' });
-        });
-    }
-})));
-router.post('/login', (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    User_1.default.findOne({
-        username: req.body.username,
-    }, function (err, user) {
-        if (err)
-            throw err;
-        if (!user) {
-            res.status(401).send({
-                success: false,
-                msg: 'Authentication failed. User not found.',
-            });
-        }
-        else {
-            // check if password matches
-            user.comparePassword(req.body.password, function (err, isMatch) {
-                if (isMatch && !err) {
-                    // if user is found and password is right create a token
-                    var token = jsonwebtoken_1.default.sign(user.toJSON(), settings_1.default.secret);
-                    // return the information including token as JSON
-                    res.json({ success: true, token: 'JWT ' + token });
-                }
-                else {
-                    res.status(401).send({
-                        success: false,
-                        msg: 'Authentication failed. Wrong password.',
-                    });
-                }
-            });
-        }
+const ApiErrors_1 = require("../core/ApiErrors");
+const bcrypt = __importStar(require("bcrypt"));
+const ApiResponse_1 = require("../core/ApiResponse");
+const router = (0, express_1.Router)();
+router.post("/register", (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, password } = req.body;
+    const newUser = new User_1.default({
+        username: username,
+        password: password,
+    });
+    // save the user
+    const savedUser = yield newUser.save();
+    if (!savedUser)
+        throw new ApiErrors_1.InternalError("Invalid e-mail perhaps?");
+    new ApiResponse_1.SuccessResponse("Registered successfuly.", {
+        user: savedUser,
     });
 })));
-router.post('/logout', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    req.logout({ keepSessionInfo: false }, (err) => console.log(err));
-    res.json({ success: true });
+router.post("/login", (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, password } = req.body;
+    const user = yield User_1.default.findOne({ username: username });
+    if (!user)
+        throw new ApiErrors_1.AuthFailureError("User not found.");
+    const isMatch = yield bcrypt.compare(password, user.password);
+    if (!isMatch)
+        throw new ApiErrors_1.AuthFailureError("Wrong password.");
+    const accessToken = jsonwebtoken_1.default.sign(user.toJSON(), process.env.ACCESS_SECRET);
+    const refreshToken = jsonwebtoken_1.default.sign(user.toJSON(), process.env.REFRESH_SECRET);
+    new ApiResponse_1.SuccessResponse("Log in successful.", {
+        accessToken,
+        refreshToken,
+        user,
+    }).send(res);
 })));
 exports.default = router;

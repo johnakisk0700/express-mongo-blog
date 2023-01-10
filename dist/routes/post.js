@@ -12,17 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const passport_1 = __importDefault(require("passport"));
-const passport_2 = __importDefault(require("../config/passport"));
-(0, passport_2.default)(passport_1.default);
+const passport_1 = __importDefault(require("../core/passport"));
 const fs_1 = __importDefault(require("fs"));
 const multer_1 = __importDefault(require("multer"));
-const Post_1 = __importDefault(require("../models/Post"));
+const Post_1 = __importDefault(require("../database/models/Post"));
 const path_1 = __importDefault(require("path"));
 const index_1 = require("../helpers/index");
 const express_1 = __importDefault(require("express"));
 const asyncHandler_1 = __importDefault(require("../helpers/asyncHandler"));
-const FreebirthError_1 = __importDefault(require("../errors/FreebirthError"));
+const ApiErrors_1 = require("../core/ApiErrors");
 const router = express_1.default.Router();
 //MULTER CONFIG
 var storage = multer_1.default.diskStorage({
@@ -33,7 +31,7 @@ var storage = multer_1.default.diskStorage({
             return cb(null, dir);
         }
         else {
-            fs_1.default.mkdir(dir, error => cb(error, dir));
+            fs_1.default.mkdir(dir, (error) => cb(error, dir));
             return cb(null, dir);
         }
     },
@@ -42,7 +40,7 @@ var storage = multer_1.default.diskStorage({
     },
 });
 //POST archive
-router.post('/archive', (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/archive", (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let match = {};
     if (req.body.postLang) {
         match = Object.assign(Object.assign({}, match), { postLang: req.body.postLang });
@@ -51,54 +49,54 @@ router.post('/archive', (0, asyncHandler_1.default)((req, res) => __awaiter(void
         { $match: match },
         {
             $project: {
-                _id: '$_id',
-                created: '$created',
-                name: '$postTitle',
+                _id: "$_id",
+                created: "$created",
+                name: "$postTitle",
             },
         },
         {
             $group: {
-                _id: { year: { $year: '$created' }, month: { $month: '$created' } },
-                children: { $push: { name: '$name', url: '$_id' } },
+                _id: { year: { $year: "$created" }, month: { $month: "$created" } },
+                children: { $push: { name: "$name", url: "$_id" } },
             },
         },
-        { $sort: { '_id.month': 1 } },
+        { $sort: { "_id.month": 1 } },
         {
             $set: {
-                name: '$_id.month',
-                count: { $size: '$children' },
-                url: '',
+                name: "$_id.month",
+                count: { $size: "$children" },
+                url: "",
             },
         },
         {
             $group: {
-                _id: '$_id.year',
-                children: { $push: '$$ROOT' },
+                _id: "$_id.year",
+                children: { $push: "$$ROOT" },
             },
         },
         {
             $set: {
-                name: '$_id',
-                count: { $sum: '$children.count' },
-                url: '',
+                name: "$_id",
+                count: { $sum: "$children.count" },
+                url: "",
             },
         },
         { $sort: { name: -1 } },
     ];
     let archive = yield Post_1.default.aggregate(pipeline);
     // add names and do final mutations
-    const mutatedArchive = archive.map(year => {
+    const mutatedArchive = archive.map((year) => {
         year.children.map((month) => (month.name = (0, index_1.toMonthName)(month.name, req.body.postLang)));
         return year;
     });
     res.json(mutatedArchive);
 })));
 //GET all posts by lang
-router.post('/', (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/", (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { postLang, pagination, search } = req.body;
     let filters = {};
     if (!postLang)
-        return next((0, FreebirthError_1.default)('No lang specified, what you speak freak?'));
+        throw new ApiErrors_1.BadRequestError("No lang specified, what you speak freak?");
     if (postLang)
         filters = Object.assign(Object.assign({}, filters), { postLang: postLang });
     if (search)
@@ -111,7 +109,7 @@ router.post('/', (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 
     res.json({ posts: posts, count: count });
 })));
 //GET a single post data by ID
-router.get('/:id', (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/:id", (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Post_1.default.findById(req.params.id, function (err, post) {
         if (err)
             return next(err);
@@ -119,7 +117,7 @@ router.get('/:id', (0, asyncHandler_1.default)((req, res, next) => __awaiter(voi
     });
 })));
 //POST a post data
-router.post('/submit', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/submit", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Post_1.default.create(req.body, function (err, post) {
         if (err)
             return next(err);
@@ -128,7 +126,7 @@ router.post('/submit', passport_1.default.authenticate('jwt', { session: false }
     });
 })));
 //update a post data by ID.
-router.put('/:id', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/:id", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Post_1.default.findByIdAndUpdate(req.params.id, req.body, {}, function (err, post) {
         if (err)
             return next(err);
@@ -136,14 +134,14 @@ router.put('/:id', passport_1.default.authenticate('jwt', { session: false }), (
     });
 })));
 //DELETE a post data by ID
-router.delete('/:id', passport_1.default.authenticate('jwt', { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete("/:id", passport_1.default.authenticate("jwt", { session: false }), (0, asyncHandler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     Post_1.default.findByIdAndRemove(req.params.id, req.body, function (err, post) {
         res.json(post);
     });
 })));
 //Upload IMG
 var upload = (0, multer_1.default)({ storage: storage });
-router.post('/imgupload', upload.single('image'), (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/imgupload", upload.single("image"), (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.json(req.file.destination + req.file.filename);
 })));
 exports.default = router;

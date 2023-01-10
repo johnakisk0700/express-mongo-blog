@@ -3,36 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const router = express_1.default.Router();
-const Category_1 = __importDefault(require("../models/Category"));
-const Post_1 = __importDefault(require("../models/Post"));
-router.get('/category', function (req, res, next) {
-    Category_1.default.find(function (err, categories) {
-        if (err)
-            return next(err);
-        res.json(categories);
-    });
-});
-router.get('/bycategory/:id', function (req, res, next) {
-    Post_1.default.find({ category: req.params.id }, function (err, posts) {
-        if (err)
-            return next(err);
-        res.json(posts);
-    });
-});
-router.get('/post', function (req, res, next) {
-    Post_1.default.find(function (err, posts) {
-        if (err)
-            return next(err);
-        res.json(posts);
-    });
-});
-router.get('/post/:id', function (req, res, next) {
-    Post_1.default.findById(req.params.id, function (err, post) {
-        if (err)
-            return next(err);
-        res.json(post);
-    });
-});
+const express_1 = require("express");
+const auth_1 = __importDefault(require("./auth/auth"));
+const categories_1 = __importDefault(require("./categories/categories"));
+const post_1 = __importDefault(require("./post/post"));
+const subscriptions_1 = __importDefault(require("./subscriptions/subscriptions"));
+const comments_1 = __importDefault(require("./comments/comments"));
+const router = (0, express_1.Router)();
+router.use("/api/auth", auth_1.default);
+router.use("/api/categories", categories_1.default);
+router.use("/api/posts", post_1.default);
+router.use("/api/comments", comments_1.default);
+router.use("/api/subscriptions", subscriptions_1.default);
 exports.default = router;
