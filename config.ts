@@ -1,4 +1,6 @@
 // Mapper for environment variables
+import crypto from "crypto";
+
 export const environment = process.env.NODE_ENV;
 export const port = process.env.PORT;
 export const timezone = process.env.TZ;
@@ -16,8 +18,8 @@ export const db = {
 export const corsUrl = process.env.CORS_URL;
 
 export const tokenInfo = {
-  accessTokenValidity: parseInt(process.env.ACCESS_TOKEN_VALIDITY_SEC || "0"),
-  refreshTokenValidity: parseInt(process.env.REFRESH_TOKEN_VALIDITY_SEC || "0"),
+  secret: "1" || crypto.randomBytes(64).toString("hex"),
+  refreshSecret: "2" || crypto.randomBytes(64).toString("hex"),
   issuer: process.env.TOKEN_ISSUER || "",
   audience: process.env.TOKEN_AUDIENCE || "",
 };

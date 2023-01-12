@@ -24,7 +24,7 @@ router.get(
 
 // [POST] Add Category
 router.post(
-  "/add",
+  "/",
   passport.authenticate("jwt", { session: false }),
   validate(categoriesSchema.category),
   asyncHandler(async (req, res, next) => {
