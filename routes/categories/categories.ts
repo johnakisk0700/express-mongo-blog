@@ -4,10 +4,11 @@ import Category, { ICategory } from "../../database/models/Category";
 import passport from "../../core/passport";
 import asyncHandler from "../../helpers/asyncHandler";
 import { SuccessResponse } from "../../core/ApiResponses";
-import { NotFoundError } from "../../core/ApiErrors";
+import { BadRequestError, NotFoundError } from "../../core/ApiErrors";
 import express from "express";
 import { categoriesSchema } from "./validationSchema";
 import { validate, validateIdParam } from "../../core/Validator";
+import { checkCatForDuplicate } from "./utils";
 
 const router = express.Router();
 
@@ -28,10 +29,15 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   validate(categoriesSchema.category),
   asyncHandler(async (req, res, next) => {
-    Category.create(req.body, function (err: TODO, category: ICategory) {
-      if (err) return next(err);
-      res.json(category);
-    });
+    const { name, greekName } = req.body;
+
+    await checkCatForDuplicate(name, greekName);
+
+    const newCategory = await Category.create(req.body);
+
+    new SuccessResponse("Successfuly created new category.", newCategory).send(
+      res
+    );
   })
 );
 
@@ -56,8 +62,11 @@ router.patch(
   validate(categoriesSchema.categoryUpdate),
   validateIdParam(),
   asyncHandler(async (req, res, next) => {
+    const { name, greekName } = req.body;
     const cat = await Category.findById(req.params.id);
     if (!cat) throw new NotFoundError("Cannot find category to update.");
+
+    await checkCatForDuplicate(name, greekName);
 
     const updatedCat = await Category.findByIdAndUpdate(
       req.params.id,
